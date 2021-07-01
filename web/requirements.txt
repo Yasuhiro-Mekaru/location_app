@@ -1,0 +1,7 @@
+###### Requirements Without Version Specifier #######
+
+flask
+mysql-connector-python
+sqlalchemy
+flask-sqlalchemy
+flask-migrate

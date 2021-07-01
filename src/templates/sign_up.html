@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>Location</title>
+
+		<!-- link -->
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/themes/base/jquery-ui.min.css">
+
+		<!-- jQuery -->
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+		<!-- <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1/i18n/jquery.ui.datepicker-ja.min.js"></script> -->
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+		<!-- 郵便番号検索ライブラリ -->
+		<script src="https://yubinbango.github.io/yubinbango/yubinbango.js" charset="UTF-8"></script>
+	</head>
+	<body>
+		<div>
+			<h1>新規登録画面</h1>
+			<p> {{ return_message }} </p>
+		</div>
+
+		<div>
+			<form action="/sign_up" method="POST" class="h-adr">
+				<h3>ユーザー情報を入力してください</h3>
+				<!-- 名前 -->
+				<div>
+					<p>お名前とフリガナを入力してください</p>
+					<p><input type="text" placeholder="姓" id="input_first_name"> <input type="text" placeholder="名" id="input_last_name"></p>
+					<p><input type="text" placeholder="セイ" id="input_kana_first"> <input type="text" placeholder="メイ" id="input_kana_last"></p>
+					<input type="hidden" name="full_name" id="input_full_name">
+					<input type="hidden" name="kana_name" id="input_full_kana">
+				</div>
+				<!-- 住所 -->
+				<div>
+					<p>住所を入力してください</p>
+					<p>郵便番号から検索できます</p>
+					<span class="p-country-name" style="display: none">Japan</span>
+					<p>〒 <input type="text" class="p-postal-code" size="8" maxlength="8" id="input_postal_first"> - <input type="text" class="p-postal-code" size="8" maxlength="8" id="input_postal_last"></p>
+					<p>都道府県名 <input type="text" class="p-region" placeholder="沖縄県" id="input_region"></p>
+    				<p>市町村名 <input type="text" class="p-locality" placeholder="那覇市" id="input_locality"></p>
+    				<p>町名 <input type="text" class="p-street-address" placeholder="久茂地" id="input_street_address"></p>	
+    				<p>番地	<input type="text" class="p-extended-address" placeholder="〇-〇-〇" id="input_extended_address"></p>
+    				<p>建物名・部屋番号 <input type="text" placeholder="メゾン〇〇 101" id="input_building"></p>
+    				<input type="hidden" id="input_postal" name="postal" >
+					<input type="hidden" id="input_address" name="address">
+				</div>
+				<!-- 電話番号 -->
+				<div>
+					<p>お電話番号とメールアドレスを入力してください</p>
+					<p><input type="tel" pattern="[0-9]{3}-[0-9]{4}-[0-9]{4}" placeholder="090-0000-0000" name="phone_number"> <input type="email" placeholder="sample@email.com" name="email_address"></p>
+				</div>
+
+				<!-- 年齢 -->
+				<div>
+					<p>生年月日を入力してください</p>
+					<p><input type="text" id="datepicker" placeholder="タップしてください" name="birth"></p>
+				</div>
+				<!-- 性別 -->
+				<div>
+					<p>性別</p>
+					<label><input type="checkbox" value="M" name="gender">男性</label>
+					<label><input type="checkbox" value="F" name="gender">女性</label>
+				</div>
+				<!-- 職業 -->
+				<div>
+					<p>職業</p>
+					<select id="select_work" name="work">
+						<option value="0">選択してください</option>
+					</select>
+					<input type="hidden" id="input_work_index" name="work_index">
+				</div>
+				<div>
+					<h3>ユーザーネームとパスワードを設定してください</h3>
+					<!-- ユーザーネーム -->
+					<div>
+						<p>10文字以内でユーザーネームを入力してください</p>
+						<p>ユーザーネーム: <input type="text" pattern="^([a-zA-Z0-9]{,10})$" placeholder="半角英数字" maxlength="10" name="login_id"></p>
+					</div>
+					<!-- パスワード -->
+					<div>
+						<p>半角英数字8文字以上16文字以内、1文字以上の数字、小文字アルファベット、大文字アルファベットを含めて入力してください</p>
+						<p>パスワード: <input type="password" pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,16}" placeholder="半角英数字" minlength="8" maxlength="16" name="password"></p>
+					</div>
+				</div>
+
+				<!-- ボタン -->
+				<input type="button" value="戻る" id="btn_back">
+				<input type="submit" value="登録する">
+			</form>
+		</div>
+
+		<script type="text/javascript">
+			$(function(){
+				console.log('jQuery start');
+				// pythonからデータ受け取り
+				let work_master = {{ datas | tojson }};
+				console.log(work_master);
+				console.log('work_master type: ' + typeof work_master);
+				// 職業選択用セレクターのセット
+				if(work_master){
+					for(let i=0; i<work_master.length; i++){
+						$('#select_work').append('<option value="' + work_master[i]['work_id'] + '">' + work_master[i]['work'] + '</option>');
+					}
+				}
+				// 職業をセレクトした際の処理
+				$('#select_work').on('change', function(event){
+					let work_index = $('option:selected').val();
+					console.log('work_index: ' + work_index);
+					console.log('work_index type: ' + typeof work_index);
+					$('#input_work_index').val(work_index);
+				})
+
+				// 生年月日入力用デイトピッカーの設定
+				$('#datepicker').datepicker({
+					monthNames: ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'],
+					changeMonth: true,
+					changeYear: true,
+					yearRange: '1900:2021',
+					dateFormat: 'yy-mm-dd'
+				});
+
+				// 名前入力の際、姓名の入力が終わった際の処理
+				$('#input_last_name').on('change', function(event){
+					let input_first_name = $('#input_first_name').val();
+					let input_last_name = $('#input_last_name').val();
+					let full_name = input_first_name + ' ' + input_last_name;
+					console.log('full_name: ' + full_name);
+					$('#input_full_name').val(full_name);
+				})
+				// 名前入力の際、カナの入力が終わった際の処理
+				$('#input_kana_last').on('change', function(event){
+					let kana_first = $('#input_kana_first').val();
+					let kana_last = $('#input_kana_last').val();
+					let full_kana_name = kana_first + ' ' + kana_last;
+					console.log('full_kana_name: ' + full_kana_name);
+					$('#input_full_kana').val(full_kana_name);
+				})
+
+				// 住所入力の際、番地表示で入力が終わった際の処理
+				$('#input_extended_address').on('change', function(event){
+					let input_region = $('#input_region').val();
+					let input_locality = $('#input_locality').val();
+					let input_street_address = $('#input_street_address').val();
+					let input_extended_address = $('#input_extended_address').val();
+					let full_address = input_region + input_locality + input_street_address + input_extended_address;
+					console.log('full_address: ' + full_address);
+
+					let input_postal_first = $('#input_postal_first').val();
+					let input_postal_last = $('#input_postal_last').val();
+					let postal_number = input_postal_first + '-' + input_postal_last;
+					console.log('postal_number: ' + postal_number);
+					// hiddenタグに値を格納しておく
+					$('#input_address').val(full_address);
+					$('#input_postal').val(postal_number);
+				});
+				// 住所入力の際、建物名まで入力した際の処理
+				$('#input_building').on('change', function(event){
+					let full_address = $('#input_address').val();
+					if(full_address){
+						$('#input_address').val('');
+					}
+					let input_region = $('#input_region').val();
+					let input_locality = $('#input_locality').val();
+					let input_street_address = $('#input_street_address').val();
+					let input_extended_address = $('#input_extended_address').val();
+					let input_building = $('#input_building').val();
+					full_address = input_region + input_locality + input_street_address + input_extended_address + ' ' + input_building;
+					console.log('full_address: ' + full_address);
+
+					let input_postal_first = $('#input_postal_first').val();
+					let input_postal_last = $('#input_postal_last').val();
+					let postal_number = input_postal_first + '-' + input_postal_last;
+					console.log('postal_number: ' + postal_number);
+					// hiddenタグに値を格納しておく
+					$('#input_address').val(full_address);
+					$('#input_postal').val(postal_number);
+				});
+
+			});
+		</script>
+
+	</body>
+</html>

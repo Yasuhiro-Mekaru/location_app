@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>Location</title>
+
+		<!-- link -->
+		<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='make_root.css') }}">
+		<!-- Font Awesome -->
+		<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.3/css/all.css" integrity="sha384-SZXxX4whJ79/gErwcOYf+zWLeJdY/qpuqC4cAa9rOGUstPomtqpuNWT9wdPEn2fk" crossorigin="anonymous">
+
+		<!-- jQuery -->
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+		<!-- Google Maps API -->
+		<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBg9IYpPXlLv6xsC1NkX-mqc1rFyt29uT8"></script>
+	</head>
+	<body>
+		<header>
+			<div>
+				<i class="fas fa-bars fa-3x fa-border fa-pull-left header_icon"></i>
+				<p class="header_user_name"> {{ message }} {{ login_id }} さん</p>
+			</div>
+			<div>
+				<h2>Application Name & Logo here</h2>
+			</div>
+			<div>
+				<h3>ルートを作成</h3>
+			</div>
+		</header>
+		<main>
+			<!-- Map -->
+			<div id="map" class="map"></div>
+
+			<!-- Modal -->
+			<!-- <div id="info-modal">
+				<p id="taxi-company">jjjjjj</p>
+				<p id="driver-name">ddddd</p>
+				<ul id="passengers">sssss</ul>
+				<p id="open-seats">2</p>
+				<input type="button" value="閉じる" id="btn-modal-close">
+			</div> -->
+
+			<div id="regist_modal" class="myplace_modal">
+				<div class="modal_header">
+					<i class="far fa-times-circle fa-3x fa-pull-right back_icon"></i>
+					<h3>マイプレイスを登録</h3>
+				</div>
+				<div class="modal_main">
+					<p>マイプレイスの名前を入力してください</p>
+					<p><input type="text" placeholder="10文字以内" maxlength="10" id="myplace_name"></p>
+				</div>
+				<div class="modal_footer">
+					<div class="myplace_modal_regist" onclick="regist_place()">
+						<i class="fas fa-cloud-upload-alt fa-3x"></i>
+						<div>登録</div>
+					</div>
+				</div>				
+			</div>
+
+			<!-- Overlay -->
+			<div id="overlay"></div>
+		</main>
+
+		<!-- Sidebar -->
+		<aside class="sidebar">
+			<div class="sidebar_inner sidebar_header">
+				<h3 class="sidebar_title">Menu</h3>
+				<i class="far fa-times-circle fa-3x fa-pull-right sidebar_icon"></i>
+			</div>
+			<div class="sidebar_main">
+				<p class="sidebar_menu" id="sidebar_profile">プロフィール</p>
+				<p class="sidebar_menu" id="sidebar_myplace">マイプレイス</p>
+				<p class="sidebar_menu" id="sidebar_mypoint">マイポイント</p>
+				<p class="sidebar_menu" id="configure">設定</p>
+			</div>
+			<div class="sidebar_footer"></div>
+			<!-- <div class="sidebar_background"></div> -->
+		</aside>
+		<div class="sidebar_background"></div>
+
+		<!-- Footer -->
+		<footer>
+			<div>
+				<button class="btn_my_place">マイプレイス</button>
+			</div>
+		</footer>
+
+		<!-- script -->
+		<script type="text/javascript">
+			console.log('javascript start');
+
+			let datas = {{ datas | tojson }};
+			console.log('datas: ', datas);
+			let is_error = datas[0]['error'];
+			if(is_error == 1){
+				alert('マイプレイスのデータを取得できませんでした');
+			}
+			let from_latitude;
+			let from_longitude;
+			let to_latitude;
+			let to_longitude;
+			let infowindow;
+
+			const map_pin_path = "M112 316.94v156.69l22.02 33.02c4.75 7.12 15.22 7.12 19.97 0L176 473.63V316.94c-10.39 1.92-21.06 3.06-32 3.06s-21.61-1.14-32-3.06zM144 0C64.47 0 0 64.47 0 144s64.47 144 144 144 144-64.47 144-144S223.53 0 144 0zm0 76c-37.5 0-68 30.5-68 68 0 6.62-5.38 12-12 12s-12-5.38-12-12c0-50.73 41.28-92 92-92 6.62 0 12 5.38 12 12s-5.38 12-12 12z";
+
+			// // infowindowの登録ボタンをタップした際の処理
+			// function regist(){
+			// 	console.log('regist button is clicked on');
+
+			// 	// regist_modal表示
+			// 	$('#regist_modal').fadeIn(1000);
+			// 	$('#overlay').fadeIn();
+
+			// 	//modalクローズ
+			// 	$('.back_icon').on('click', function(){
+			// 		$('#regist_modal').fadeOut();
+			// 		$('#overlay').fadeOut();
+			// 	});
+			// }
+
+			// function regist_place(){
+			// 	console.log('regist_place is clicked on');
+
+			// 	let name = $('#myplace_name').val();
+			// 	datas = {
+			// 		name: name,
+			// 		latitude: latitude,
+			// 		longitude: longitude
+			// 	};
+			// 	$.ajax({
+			// 		type: 'POST',
+			// 		contentType: 'application/json',
+			// 		url: 'http://localhost:5000/regist_place',
+			// 		data: JSON.stringify(datas),
+			// 		dataType: 'json'
+			// 	}).then(function(response){
+			// 		console.log(response);
+			// 		alert('マイプレイスを登録しました');
+			// 		$('#regist_modal').fadeOut();
+			// 		$('#overlay').fadeOut();
+			// 		infowindow.close();
+			// 	}, function(error){
+			// 		console.log('error is occured');
+			// 		alert('マイプレイスを登録できませんでした\nやり直してください');
+			// 		$('#regist_modal').fadeOut();
+			// 		$('#overlay').fadeOut();
+			// 		infowindow.close();
+			// 	});
+			// }
+
+			// 現在地取得処理
+			function initMap() { 
+				// Geolocation APIに対応している
+				if (navigator.geolocation) {
+					// 現在地を取得
+					navigator.geolocation.getCurrentPosition(
+						// 取得成功した場合
+						function(position) {
+							// 端末の緯度・経度を取得
+							let mapLatLng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
+							console.log('geolocation position lat: ' + position.coords.latitude);
+							console.log('geolocation position lng: ' + position.coords.longitude);
+							// マップオプションを変数に格納
+							let mapOptions = {
+								zoom : 13,          // 拡大倍率
+								center : mapLatLng  // 緯度・経度
+							};
+							// マップオブジェクトを生成
+							let map = new google.maps.Map(
+								document.getElementById("map"), // マップを表示する要素
+								mapOptions         // マップオプション
+							);
+
+							// マーカーオブジェクトに渡すiconを定義する
+							let map_icon = {
+								scale: 0.1,
+								fillColor: '#000',
+								fillOpacity: 0.7,
+								path: map_pin_path
+							}
+
+							// サーバーから取得したデータを変数に格納
+							let state = datas[0]['state'];
+							if(state == 'deperture'){
+								let from_latitude = datas[0]['latitude'];
+								let from_longitude = datas[0]['longitude'];
+								let from_latlng = new google.maps.LatLng(from_latitude, from_longitude);
+
+								// マーカーオブジェクトを生成
+								let from_marker = new google.maps.Marker({
+									position: from_latlng,
+									map: map,
+									anchor: new google.maps.Point(0,0),
+									icon: map_icon
+								});
+							}
+							else{
+								let to_latitude = datas[0]['latitude'];
+								let to_longitude = datas[0]['longitude'];
+								let to_latlng = new google.maps.LatLng(to_latitude, to_longitude);
+
+								// マーカーオブジェクトを生成
+								let from_marker = new google.maps.Marker({
+									position: to_latlng,
+									map: map,
+									anchor: new google.maps.Point(0,0),
+									icon: map_icon
+								});
+							}
+
+							// マーカーオブジェクトを生成
+							let marker = new google.maps.Marker({
+								position: mapLatLng,
+								map: map
+							});
+
+							// // mapオブジェクトへのクリックイベント
+							// map.addListener('click', (event)=>{
+							// 	latitude = event.latLng.lat();
+							// 	longitude = event.latLng.lng();
+							// 	console.log('event.latLng.lat()' + event.latLng.lat());
+							// 	console.log('event.latLng.lng()' + event.latLng.lng());
+							// 	// 目的地のlatLngを設定
+							// 	let destination = new google.maps.LatLng(event.latLng.lat(), event.latLng.lng());
+
+							// 	let contentString = document.createElement('div');
+							// 	contentString.innerHTML = '\
+							// 	<div class="content">\
+							// 		<div class="content_title" id="content_title">\
+							// 			<h1 id="title">ここをマイプレイスに登録しますか？</h1>\
+							// 		</div>\
+							// 		<div class="content_buttons">\
+							// 			<button class="content_back">戻る</button>\
+							// 			<button class="content_regist" onclick="regist()">登録</button>\
+							// 		</div>';
+
+							// 	// infoWindowオブジェクトを生成
+							// 	infowindow = new google.maps.InfoWindow({
+							// 		content: contentString,
+							// 		position: destination
+							// 	});
+							// 	infowindow.open(map);
+							// });
+
+					 	},
+						// 取得失敗した場合
+						function(error) {
+							// エラーメッセージを表示
+							switch(error.code) {
+								case 1: // PERMISSION_DENIED
+									alert("位置情報の利用が許可されていません");
+									break;
+								case 2: // POSITION_UNAVAILABLE
+									alert("現在位置が取得できませんでした");
+									break;
+								case 3: // TIMEOUT
+									alert("タイムアウトになりました");
+									break;
+								default:
+									alert("その他のエラー(エラーコード:"+error.code+")");
+									break;
+							}
+						}
+				 	);
+				// Geolocation APIに対応していない
+				} else {
+				 alert("この端末では位置情報が取得できません");
+				}
+			}
+
+			$(function(){
+				console.log('jQuery start');
+				// 端末の大きさを取得し、9掛けする
+				let map_width = $(window).width() * 0.9;
+				let map_height = $(window).height() * 0.8;
+				// $('#map').width(map_width);
+				// $('#map').height(map_height);
+
+				initMap();
+
+				// sidebarの開閉処理
+				$('.header_icon').on('click', function(){
+					$('.sidebar').css('display', 'block').animate({left: '0'}, 300);
+					$('.sidebar_background').css('display', 'block').animate({opacity: '0.5'}, 300);
+				});
+				$('.sidebar_icon').on('click', function(){
+					$('.sidebar').animate({left: '-60%'}, 300);
+					$('.sidebar_background').animate({opacity: '0'}, 300);
+					setTimeout(function(){
+						$('.sidebar').css('display', 'none');
+						$('.sidebar_background').css('display', 'none');
+					}, 300);
+				});
+
+				// マイプレイスモーダルの開閉処理
+				$('#sidebar_myplace').on('click', function(){
+					console.log('sidebar_myplace is clicked on');
+					$('.sidebar').animate({left: '-60%'}, 300);
+					$('.sidebar_background').animate({opacity: '0'}, 300);
+					setTimeout(function(){
+						$('.sidebar').css('display', 'none');
+						$('.sidebar_background').css('display', 'none');
+					}, 300);
+
+					$('#myplace_modal').fadeIn(1000);
+					$('#overlay').fadeIn();
+				});
+
+			});
+		</script>
+	</body>
+</html>

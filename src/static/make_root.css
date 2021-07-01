@@ -1,0 +1,186 @@
+html, body {
+	width: 100%;
+	height: 100%;
+}
+
+header, footer {
+	width: 100%;
+	height: 10%;
+	background-color: #ff6347;
+}
+
+main {
+	width: 100%;
+	height: 80%;
+	background-color: #fffff0;
+}
+
+.map {
+	width: 90%;
+	height: 100%;
+	margin-right: 5%;
+	margin-left: 5%;
+}
+
+#overlay {
+	display: none;
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background-color: rgba(0, 0, 0, 0.7);
+	z-index: 10;
+}
+
+#info-modal {
+	display: none;
+	position: fixed;
+	top:20%;
+	left: 20%;
+	width: 60%;
+	height: 60%;
+	/*transform: ;*/
+	background-color: #eaedf2;
+	border-radius: 20px;
+	z-index: 11;
+	padding: 2rem;
+}
+
+#button-modal-close {
+	position: absolute;
+	top: 90%;
+	left: 80%;
+	width: 10%;
+	/*height: 10%;
+	transform: ;*/
+	background-color: #eaeaea;
+	border-radius: 20rem;
+	padding: 1rem;
+}
+
+.header_user_name {
+	float: right;
+	font-size: 2rem;
+}
+
+.sidebar {
+	position: fixed;
+	width: 75%;
+	height: 100%;
+	top: 0;
+	left: -75%;
+	background-color: #fff;
+	z-index: 11;
+	box-sizing: border-box;
+	display: none;
+}
+
+.sidebar_icon {
+	font-size: 20px;
+	color: #000;
+}
+
+/*.sidebar_menu {
+
+	font-size: 20px;
+	margin-top: 10rem;
+	margin-left: 5rem;
+}*/
+
+.sidebar_background {
+	position: fixed;
+	width: 75%;
+	height: 100%;
+	opacity: 0;
+	top: 0;
+	left: 0;
+	z-index: 10;
+	display: none;
+}
+
+.sidebar_header {
+	width: 100%;
+	height: 20%;
+	border-bottom: solid 4px #333;
+}
+
+.sidebar_main {
+	width: 100%;
+	height: 65%;
+}
+
+.sidebar_menu {
+	width: 100%;
+	height: 20%;
+	/*font-size: 2rem;*/
+	font-weight: bold;
+	border-bottom: dotted 3px #333 
+}
+
+.sidebar_footer {
+	width: 100%;
+	height: 15%;
+	border-top: solid 4px #333;
+	display: flex;
+}
+
+.btn_my_place {
+	float: right;
+	width: 20%;
+	padding: 2%;
+	background-color: #0000cd;
+	border-radius: 80px;
+	border-color: #00008b;
+}
+
+.myplace_modal {
+	width: 60%;
+	height: 30%;
+	position: fixed;
+	top:20%;
+	left: 20%;
+	background-color: #eaedf2;
+	border-radius: 20px;
+	z-index: 11;
+	padding: 2rem;
+	display: none;
+}
+
+.modal_header {
+	width: 100%;
+	height: 20%;
+	border-bottom: solid 3px #333;
+}
+
+.modal_main {
+	width: 100%;
+	height: 60%;
+	border-bottom: solid 3px #333;
+}
+
+.modal_footer {
+	width: 100%;
+	height: 20%;
+}
+
+/*.modal_footer_register {
+	float: right;
+}*/
+
+.myplace_modal_regist {
+	width: 10%;
+	border-radius: 10px;
+	color: #fff;
+	text-align: center;
+	font-weight: bold;
+	background-color: #003fbf;
+	margin: 1%;
+	padding: 1% 0;
+	float: right;
+}
+
+.content {
+	width: 80%;
+	height: 60%;
+}

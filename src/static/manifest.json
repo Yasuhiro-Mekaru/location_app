@@ -1,0 +1,22 @@
+{
+	"name": "Location_App",
+	"short_name": "Location",
+	"start_url": "/",
+	"display": "standalone",
+	"background_color": "#00ffff",
+	"theme_color": "#4b0082",
+	"orientation": "portrait",
+	"icons": [
+		{
+			"src": "/static/images/icon-64.png",
+			"type": "image/png",
+			"sizes": "64x64"
+		},
+		{
+			"src": "/static/images/icon-192.png",
+			"type": "image/png",
+			"sizes": "192x192"
+		}
+	],
+	"gcm_sender_id": "103953800507"
+}

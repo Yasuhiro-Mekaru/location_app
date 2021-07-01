@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>GPS</title>
+
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+		<script type="text/javascript">
+			$(function(){
+				console.log('jQuery start');
+				const host = 'http://localhost:5000/';
+
+				function test(){
+					console.log('test is called');
+					navigator.geolocation.getCurrentPosition(test2);
+				}
+
+				function test2(position){
+					console.log('position: ' + position);
+					console.log(position);
+
+					// let geo_text = 'Latitude: ' + position.coords.latitude + '\n';
+					// geo_text += 'Longitude: ' + position.coords.longitude +'\n';
+					// geo_text += 'Altitude: ' + position.coords.altitude + '\n';
+					// alert(geo_text);
+
+					//posionからLat, Lngを取り出す
+					geo_infos = {};
+					geo_infos['lat'] = position.coords.latitude;
+					geo_infos['lng'] = position.coords.longitude;
+					geo_infos['alt'] = position.coords.altitude;
+					console.log('lat: ' + geo_infos.lat);
+					console.log('lat: type: ' + typeof geo_infos.lat);
+					console.log('alt: ' + geo_infos.alt);
+					console.log('alt type: ' + typeof geo_infos.alt);
+
+					$('#show_lat').text(geo_infos.lat);
+					$('#show_lng').text(geo_infos.lng);
+					$('#show_alt').text(geo_infos.alt);
+
+					let table_name = 'locations';
+					geo_infos['table_name'] = table_name;
+
+					$.ajax({
+						type: 'POST',
+						contentType: 'application/json',
+						data: JSON.stringify(geo_infos),
+						dataType: 'json',
+						url: host + '/insert',
+					}).then(function(response){
+						console.log('ajax success response:');
+						console.log(response);
+					}, function(error){
+						console.log('ajax failed error');
+						console.log(error);
+					});
+				};
+
+				$('#btn_get_latlng').on('click', function(){
+					console.log('btn_get_latlng clicked');
+					test();
+				});
+			});
+		</script>
+	</head>
+	<body>
+		<h1>Hello Flask!!</h1>
+
+		<button id="btn_get_latlng">Get LatLng</button>
+
+		<form action="/regist" method="POST">
+			<input type="submit" value="Create Table">
+		</form>
+
+		<p id="show_lat"></p>
+		<p id="show_lng"></p>
+		<p id="show_alt"></p>
+	</body>
+</html>

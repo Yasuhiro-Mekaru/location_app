@@ -1,0 +1,61 @@
+version: "3"
+
+services:
+  # https:
+  #   image: steveltn/https-portal:latest
+  #   container_name: httpsServer
+  #   # hostname: httpsServer
+  #   ports:
+  #     - '80:80'
+  #     - '443:443'
+  #   volumes:
+  #     - ssl_certs:/var/lib/https-portal
+  #     # - ./nginx-conf/ec2-3-133-57-141.us-east-2.compute.amazonaws.com.conf.erb:/var/lib/nginx-conf/ec2-3-133-57-141.us-east-2.compute.amazonaws.com.conf.erb:ro
+  #   links:
+  #     - web
+  #   environment:
+  #     # - DOMAINS='http://ec2-3-133-57-141.us-east-2.compute.amazonaws.com -> http://web:5000'
+  #     # DOMAINS: 'localhost -> http://web:5000'
+  #     DOMAINS: 'ec2-3-133-57-141.us-east-2.compute.amazonaws.com -> http://web:5000'
+  #     STAGE: staging
+  #     SERVER_NAMES_HASH_BUCKET_SIZE: 256
+  #   restart: always
+
+  web:
+    build: ./web
+    container_name: flask
+    command: python3 app.py
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./src:/work/src
+      - ./web:/work/web
+    # privileged: true
+    links: 
+      - database
+    restart: always
+    # tty: true
+
+  database:
+    build: ./db
+    image: mysql:5.7
+    container_name: mysql
+    ports:
+      - "0.0.0.0:3306:3306"
+    volumes:
+      - ./db/data:/var/lib/mysql
+      - ./db/my.cnf:/etc/mysql/conf.d/my.cnf
+      - ./db/sql:/docker-entrypoint-initdb.d
+      - ./db/log:/var/log/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=location
+      - MYSQL_USER=admin
+      - MYSQL_PASSWORD=password
+      - BIND-ADRESS=0.0.0.0
+      - TZ=Asia/Tokyo
+    command: mysqld --character-set-server=utf8mb4 --collation-server=utf8mb4_bin
+    restart: always
+
+
+

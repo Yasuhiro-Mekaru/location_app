@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>Location</title>
+
+		<!-- link -->
+		<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='main_menu.css') }}">
+		<!-- Font Awesome -->
+		<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.3/css/all.css" integrity="sha384-SZXxX4whJ79/gErwcOYf+zWLeJdY/qpuqC4cAa9rOGUstPomtqpuNWT9wdPEn2fk" crossorigin="anonymous">
+
+		<!-- jQuery -->
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+		<!-- Google Maps API -->
+		<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBg9IYpPXlLv6xsC1NkX-mqc1rFyt29uT8"></script>
+		<!-- The core Firebase JS SDK is always required and must be listed first -->
+		<script src="https://www.gstatic.com/firebasejs/8.4.1/firebase-app.js"></script>
+		<!-- TODO: Add SDKs for Firebase products that you want to use
+		     https://firebase.google.com/docs/web/setup#available-libraries -->
+		<script src="https://www.gstatic.com/firebasejs/8.4.1/firebase-analytics.js"></script>
+		<script src="https://www.gstatic.com/firebasejs/8.4.1/firebase-messaging.js"></script>
+	</head>
+	<body>
+		<header>
+			<div>
+				<i class="fas fa-bars fa-3x fa-border fa-pull-left header_icon"></i>
+				<p class="header_user_name"> {{ message }} {{ login_id }} さん</p>
+			</div>
+			<div>
+				<h2>Application Name & Logo here</h2>
+			</div>
+		</header>
+		<main>
+			<!-- Map -->
+			<div id="map" class="map"></div>
+
+			<!-- Modal -->
+			<div id="info-modal">
+				<p id="taxi-company">jjjjjj</p>
+				<p id="driver-name">ddddd</p>
+				<ul id="passengers">sssss</ul>
+				<p id="open-seats">2</p>
+				<input type="button" value="閉じる" id="btn-modal-close">
+			</div>
+
+			<!-- Myplace Modal -->
+			<div id="myplace_modal" class="myplace_modal">
+				<div class="myplace_modal_header">
+					<i class="far fa-times-circle fa-3x fa-pull-right back_icon"></i>
+					<h3>マイプレイス</h3>
+				</div>
+				<div class="myplace_modal_main" id="myplace_modal_main">
+				</div>
+				<div class="myplace_modal_footer">
+					<a href="{{ url_for('regist_place') }}" class="modal_footer_register">
+						<div class="myplace_modal_regist">
+							<i class="fas fa-cloud-upload-alt fa-3x"></i>
+							<div>登録</div>
+						</div>
+					</a>
+				</div>				
+			</div>
+
+			<!-- Overlay -->
+			<div id="overlay"></div>
+		</main>
+		<aside class="sidebar">
+			<div class="sidebar_inner sidebar_header">
+				<h3 class="sidebar_title">Menu</h3>
+				<i class="far fa-times-circle fa-3x fa-pull-right sidebar_icon"></i>
+			</div>
+			<div class="sidebar_main">
+				<p class="sidebar_menu" id="sidebar_profile">プロフィール</p>
+				<p class="sidebar_menu" id="sidebar_myplace">マイプレイス</p>
+				<p class="sidebar_menu" id="sidebar_mypoint">マイポイント</p>
+				<p class="sidebar_menu" id="configure">設定</p>
+			</div>
+			<div class="sidebar_footer"></div>
+		</aside>
+		<footer>
+			<div>
+				<button class="btn_my_place">マイプレイス</button>
+			</div>
+		</footer>
+
+		<script type="text/javascript">
+			if('serviceWorker' in navigator){
+				window.addEventListener('load', ()=>{
+					navigator.serviceWorker.register('./firebase-messaging-sw.js').then(registration => {
+						console.log('Complete registing Service Worker');
+						console.log('Service Workers scope is ', registration.scope);
+						return registration
+					}).catch(err => {
+						console.log('Error occured');
+					});
+				});
+			}
+
+			// Your web app's Firebase configuration
+			// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+			var firebaseConfig = {
+				apiKey: "AIzaSyBg9IYpPXlLv6xsC1NkX-mqc1rFyt29uT8",
+				authDomain: "location-app-project-310607.firebaseapp.com",
+				projectId: "location-app-project-310607",
+				storageBucket: "location-app-project-310607.appspot.com",
+				messagingSenderId: "304992216180",
+				appId: "1:304992216180:web:0bfadc47213641dd941d21",
+				measurementId: "G-LFQK2FP3MP"
+			};
+			// Initialize Firebase
+			firebase.initializeApp(firebaseConfig);
+
+			const messaging = firebase.messaging();
+			// Get registration token. Initially this makes a network call, once retrieved
+			// subsequent calls to getToken will return from cache.
+			messaging.getToken({vapidKey: 'BIESRrHTezytULH1Ubf0HFC5lKFBbnhV8VP9103NPugusCDGBEWlPyAbTCzJjbVa2Um4b9S4xCqe-5ALi3nDJms'}).then((currentToken) => {
+			  if (currentToken) {
+			  	console.log('currentToken');
+			  	console.log(currentToken)
+			    // sendTokenToServer(currentToken);
+			    // updateUIForPushEnabled(currentToken);
+			  } else {
+			    // Show permission request.
+			    console.log('No registration token available. Request permission to generate one.');
+			    // Show permission UI.
+			    // updateUIForPushPermissionRequired();
+			    // setTokenSentToServer(false);
+			  }
+			}).catch((err) => {
+			  console.log('An error occurred while retrieving token. ', err);
+			  // showToken('Error retrieving registration token. ', err);
+			  // setTokenSentToServer(false);
+			});
+
+			// Handle incoming messages. Called when:
+			// - a message is received while the app has focus
+			// - the user clicks on an app notification created by a service worker
+			//   `messaging.onBackgroundMessage` handler.
+			messaging.onMessage((payload) => {
+			  console.log('Message received. ', payload);
+			  // ...
+			});
+
+			const taxi_icon_path = 'M544 192h-16L419.22 56.02A64.025 64.025 0 0 0 369.24 32H155.33c-26.17 0-49.7 15.93-59.42 40.23L48 194.26C20.44 201.4 0 226.21 0 256v112c0 8.84 7.16 16 16 16h48c0 53.02 42.98 96 96 96s96-42.98 96-96h128c0 53.02 42.98 96 96 96s96-42.98 96-96h48c8.84 0 16-7.16 16-16v-80c0-53.02-42.98-96-96-96zM160 432c-26.47 0-48-21.53-48-48s21.53-48 48-48 48 21.53 48 48-21.53 48-48 48zm72-240H116.93l38.4-96H232v96zm48 0V96h89.24l76.8 96H280zm200 240c-26.47 0-48-21.53-48-48s21.53-48 48-48 48 21.53 48 48-21.53 48-48 48z';
+
+
+			// 現在地取得処理
+			function initMap(datas) {
+				// Geolocation APIに対応している
+				if (navigator.geolocation) {
+					// 現在地を取得
+					navigator.geolocation.getCurrentPosition(
+						// 取得成功した場合
+						function(position) {
+							// 端末の緯度・経度を取得
+							let mapLatLng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
+							console.log('geolocation position lat: ' + position.coords.latitude);
+							console.log('geolocation position lng: ' + position.coords.longitude);
+							// マップオプションを変数に格納
+							let mapOptions = {
+								zoom : 13,          // 拡大倍率
+								center : mapLatLng  // 緯度・経度
+							};
+							// マップオブジェクトを生成
+							let map = new google.maps.Map(
+								document.getElementById("map"), // マップを表示する要素
+								mapOptions         // マップオプション
+							);
+
+							// 現在動いているルート情報を表示
+							let num = datas.datas.length;
+							console.log('num: ' + num);
+							for(let i=0; i<num; i++){
+								// 出発地のlatLngを設定
+								let origin = new google.maps.LatLng(datas.datas[i]['from_latitude'], datas.datas[i]['from_longitude'])
+								// 目的地のlatLngを設定
+								let destination = new google.maps.LatLng(datas.datas[i]['to_latitude'], datas.datas[i]['to_longitude']);
+
+								// タクシーの現在地を設定
+								let now_latlng = new google.maps.LatLng(datas.datas[i]['now_latitude'], datas.datas[i]['now_longitude']);
+
+								// マーカーオブジェクトに渡すiconを定義する
+								let taxi_icon = {
+									scale: 0.06,
+									fillColor: '#000',
+									fillOpacity: 0.7,
+									path: taxi_icon_path
+								}
+
+								// 乗り合い可能かでpolylineの色を分ける
+								if(!datas.datas[i]['open_seats']){
+									lineColor = 'red';
+								}
+								else{
+									lineColor = 'blue';
+								}
+
+								// routeのpolylineのオプション
+								let polyLineOption = {
+									clickable: true,
+									strokeColor: lineColor,
+									strokeWeight: 20
+								};
+
+								let polylines = [];
+								function renderDirectionPolyline(res){
+									for(let i=0; i<polylines.length; i++){
+										polylines[i].setMap(null);
+									};
+									let legs = res.routes[0].legs;
+									for(let i=0; i<legs.length; i++){
+										let steps = legs[i].steps;
+										for(let j=0; j<steps.length; j++){
+											let nextSegment = steps[j].path;
+											let polyLine = new google.maps.Polyline(polyLineOption);
+											for(let k=0; k<nextSegment.length; k++){
+												polyLine.getPath().push(nextSegment[k]);
+											}
+											polylines.push(polyLine);
+											polyLine.setMap(map);
+
+											google.maps.event.addListener(polyLine, 'click', (event)=>{
+												console.log('polyline is clicked on!!!');
+												console.log(event);
+
+												// modal表示
+												$('#info-modal').fadeIn(1000, 'swing');
+												$('#overlay').fadeIn();
+
+												//modalクローズ
+												$('#btn-modal-close').on('click', function(){
+													$('#info-modal').fadeOut();
+													$('#overlay').fadeOut();
+												});
+											});
+										}
+									}
+								}
+
+
+								//DirectionServiceオブジェクトを生成
+								let directionsService = new google.maps.DirectionsService();
+								//DirectionRendererオブジェクトを生成
+								let directionsRenderer = new google.maps.DirectionsRenderer({
+									map: map,
+									preserveViewport: true,
+									suppressPolylines: true
+								});
+								//directionsRenderer.setMap(map);
+
+								// directionsServiceオブジェクトへのリクエスト
+								let request = {
+									origin: origin,
+									destination: destination,
+									travelMode: 'DRIVING',
+									avoidHighways: true,
+									avoidTolls: true
+								}
+								// ルートを取得
+								directionsService.route(request, function(result, status){
+									if(status === 'OK'){
+										console.log('directionsService.route result: ' + i);
+										console.log(result);
+										directionsRenderer.setDirections(result);
+										renderDirectionPolyline(result);
+										let now_marker = new google.maps.Marker({
+											map: map,
+											position: now_latlng,
+											anchor: new google.maps.Point(0,0),
+											animation: google.maps.Animation.BOUNCE,
+											icon: taxi_icon
+										})
+									}
+									else{
+										alert('ルートを取得できませんでした: ' + status);
+									}
+								});
+
+							}
+
+							// マーカーオブジェクトを生成
+							let marker = new google.maps.Marker({
+								position: mapLatLng,
+								map: map
+							});
+
+							// mapオブジェクトへのクリックイベント
+							map.addListener('click', (event)=>{
+								// 目的地のlatLngを設定
+								let destination = new google.maps.LatLng(event.latLng.lat(), event.latLng.lng());
+								console.log('event.latLng.lat()' + event.latLng.lat());
+								console.log('event.latLng.lng()' + event.latLng.lng());
+
+								// //DirectionServiceオブジェクトを生成
+								// let directionsService = new google.maps.DirectionsService();
+								// //DirectionRendererオブジェクトを生成
+								// let directionsRenderer = new google.maps.DirectionsRenderer();
+								// directionsRenderer.setMap(map);
+
+								// // directionsServiceオブジェクトへのリクエスト
+								// let request = {
+								// 	origin: mapLatLng,
+								// 	destination: destination,
+								// 	travelMode: 'DRIVING',
+								// 	avoidHighways: true,
+								// 	avoidTolls: true
+								// }
+								// // ルートを取得
+								// directionsService.route(request, function(result, status){
+								// 	if(status === 'OK'){
+								// 		directionsRenderer.setDirections(result);
+								// 	}
+								// 	else{
+								// 		alert('ルートを取得できませんでした: ' + status);
+								// 	}
+								// });
+							});
+
+					 	},
+						// 取得失敗した場合
+						function(error) {
+							// エラーメッセージを表示
+							switch(error.code) {
+								case 1: // PERMISSION_DENIED
+									alert("位置情報の利用が許可されていません");
+									break;
+								case 2: // POSITION_UNAVAILABLE
+									alert("現在位置が取得できませんでした");
+									break;
+								case 3: // TIMEOUT
+									alert("タイムアウトになりました");
+									break;
+								default:
+									alert("その他のエラー(エラーコード:"+error.code+")");
+									break;
+							}
+						}
+				 	);
+				// Geolocation APIに対応していない
+				} else {
+				 alert("この端末では位置情報が取得できません");
+				}
+			}
+
+			$(function(){
+				console.log('jQuery start');
+				// 端末の大きさを取得し、9掛けする
+				let map_width = $(window).width() * 0.9;
+				let map_height = $(window).height() * 0.8;
+				// $('#map').width(map_width);
+				// $('#map').height(map_height);
+
+				// // route_transactionテーブルから現在動いているルート情報を取得した値
+				// let current_route_datas = {# current_route_datas | tojson #};
+				// console.log('current_route_datas');
+				// console.log(current_route_datas);
+				let current_route_datas = {
+					'datas': [{
+						'from_latitude': 26.2773448, //Round1
+						'from_longitude': 127.7292852,
+						'to_latitude': 26.3020168, //Araha Beach
+						'to_longitude': 127.7579188,
+						'now_latitude': 26.285203, //ハニンス
+						'now_longitude': 127.744933,
+						'driver_name': '比嘉 太郎',
+						'taxi_company_name': '四和交通',
+						'passengers': {
+							'passenger1': 'Mekaru001',
+							'passenger2': 'Hirooo'
+						},
+						'open_seats': 1, 
+					}, {
+						'from_latitude': 26.3121475, //Ricom
+						'from_longitude': 127.7916086,
+						'to_latitude': 26.1982252, //ichinichibashi crossroad
+						'to_longitude': 127.7126295,
+						'now_latitude': 26.259478, //ginowann shimashi
+						'now_longitude': 127.758617,
+						'driver_name': '金城 次郎',
+						'taxi_company_name': '沖西交通',
+						'passengers': {
+							'passenger1': 'umiumi',
+							'passenger2': 'yasuko',
+							'passenger3': 'kyoukkkk'
+						},
+						'open_seats': 0 //1=true
+					}, {
+						'from_latitude': 26.3074027, //Kenso
+						'from_longitude': 127.8110913,
+						'to_latitude': 26.2894582, //Sharima
+						'to_longitude': 127.7688667,
+						'now_latitude': 26.297224, //Adaniya
+						'now_longitude': 127.7848594,
+						'driver_name': '与那覇 三郎',
+						'taxi_company_name': '日木交通',
+						'passengers': {
+							'passenger1': 'kouki433'
+						},
+						'open_seats': 2
+					}]
+				};
+				console.log(current_route_datas);
+
+				initMap(current_route_datas);
+
+				// sidebarの開閉処理
+				$('.header_icon').on('click', function(){
+					$('.sidebar').css('display', 'block').animate({left: '0'}, 300);
+					$('.sidebar_background').css('display', 'block').animate({opacity: '0.5'}, 300);
+				});
+				$('.sidebar_icon').on('click', function(){
+					$('.sidebar').animate({left: '-60%'}, 300);
+					$('.sidebar_background').animate({opacity: '0'}, 300);
+					setTimeout(function(){
+						$('.sidebar').css('display', 'none');
+						$('.sidebar_background').css('display', 'none');
+					}, 300);
+				});
+
+				// マイプレイスモーダルの開閉処理
+				$('#sidebar_myplace').on('click', function(){
+					console.log('sidebar_myplace is clicked on');
+					$.ajax({
+						type: 'GET',
+						contentType: 'application/json',
+						url: 'http://localhost:5000/get_myplace'
+					}).then(function(response){
+						console.log(response);
+						let modal_main = $('#myplace_modal_main');
+						if(response.length == 0){
+							console.log('No myplace');
+							modal_main.append('<p>マイプレイスは登録されていません</p>');
+						}
+						else{
+							console.log('myplace Exist');
+							for(let i=0; i<response.length; i++){
+								let name = response[i]['name'];
+								let myplace_id = response[i]['user_myplace_id'];
+								modal_main.append('\
+									<div class="card">\
+										<div class="box">\
+											<div class="map_icon">\
+												<i class="fas fa-map-marked-alt fa-3x icon" id="' + i + '"></i>\
+											</div>\
+											<div class="card_contents">\
+												<div class="card_content_name">\
+													<p class="myplace_name" id="myplace_name">' + name + '</p>\
+												</div>\
+												<div class="card_content_button">\
+													<form action="/make_root" method="POST">\
+														<input type="hidden" name="departure" value="' + myplace_id + '">\
+														<input type="submit" class="btn_departure" value="ここから乗る"/>\
+													</form>\
+													<form action="/make_root" method="POST">\
+														<input type="hidden" name="arrive" value="' + myplace_id + '">\
+														<input type="submit" class="btn_arrival" value="ここへ行く"/>\
+													</form>\
+												</div>\
+											</div>\
+											<div class="trash_icon">\
+												<i class="fas fa-trash-alt fa-3x icon" id="' + i + '"></i>\
+											</div>\
+										</div>\
+									</div>\
+								');
+							}
+
+							// mapアイコンにクリックイベントを設定
+							$('.map_icon').on('click', 'i', function(){
+								console.log(this);
+								let id = this.id;
+								console.log('id type: ', typeof id);
+								console.log(response[id]);
+							});
+
+							// trashアイコンにクリックイベントを設定
+							$('.trash_icon').on('click', 'i', function(){
+								console.log(this.id);
+								let id = this.id;
+								console.log(response[id]);
+								datas = response[id]
+								$.ajax({
+									type: 'POST',
+									contentType: 'application/json',
+									url: 'http://localhost:5000/delete_myplace',
+									data: JSON.stringify(datas),
+									dataType: 'json'
+								}).then(function(res){
+									console.log(res);
+									alert('マイプレイスを削除しました');
+									$('#myplace_modal').fadeOut();
+									$('#myplace_modal_main').html('');
+									$('#overlay').fadeOut();
+								}, function(err){
+									console.log(err);
+									alert('マイプレイスを削除できませんでした');
+								});
+							});
+
+							// $('.btn_departure, .btn_arrival').on('click', function(){
+							// 	console.log(this);
+							// 	let id = this.id;
+							// 	console.log(id);
+							// 	console.log('id type: ', typeof id);
+							// 	console.log(response[id]);
+							// 	console.log(this.name);
+							// 	datas = response[id];
+							// 	datas['name'] = this.name;
+							// 	console.log(datas);
+							// 	$.ajax({
+							// 		type: 'POST',
+							// 		contentType: 'application/json',
+							// 		url: 'http://localhost:5000/main_menu',
+							// 		data: JSON.stringify(datas),
+							// 		dataType: 'json'
+							// 	}).then(function(resp){
+							// 		console.log(resp);
+							// 	}, function(erro){
+							// 		console.log(erro);
+							// 	})
+							// });
+
+						}
+					}, function(error){
+						console.log(error);
+					});
+
+					$('.sidebar').animate({left: '-60%'}, 300);
+					$('.sidebar_background').animate({opacity: '0'}, 300);
+					setTimeout(function(){
+						$('.sidebar').css('display', 'none');
+						$('.sidebar_background').css('display', 'none');
+					}, 300);
+
+					// モーダルを開く
+					$('#myplace_modal').fadeIn(1000);
+					$('#overlay').fadeIn();
+					//　モーダルを閉じる
+					//modalクローズ
+					$('.back_icon').on('click', function(){
+						$('#myplace_modal').fadeOut();
+						$('#myplace_modal_main').html('');
+						$('#overlay').fadeOut();
+					});
+				});
+
+			});
+		</script>
+	</body>
+</html>

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>Location</title>
+
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+	</head>
+	<body>
+		<div>
+			<h1>ログイン画面</h1>
+		</div>
+		<p>{{ message }}</p>
+		<p>パスワードを入力してサインインしてください。</p>
+		<div>
+			<form action="/sign_in" method="POST">
+				<!-- ユーザーネーム -->
+				<div>
+					<p>10文字以内でユーザーネームを入力してください</p>
+					<p>ユーザーネーム: <input type="text" pattern="^([a-zA-Z0-9]{,10})$" placeholder="半角英数字" maxlength="10" id="input_login_id" name="login_id"></p>
+				</div>
+				<!-- パスワード -->
+				<div>
+					<p>半角英数字8文字以上16文字以内、1文字以上の数字、小文字アルファベット、大文字アルファベットを含めて入力してください</p>
+					<p>パスワード: <input type="password" pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,16}" placeholder="半角英数字" minlength="8" maxlength="16" name="password"></p>
+				</div>
+
+				<!-- ボタン -->
+				<input type="button" value="戻る" id="btn_back">
+				<input type="submit" value="ログイン">
+			</form>
+		</div>
+
+		<script type="text/javascript">
+			$(function(){
+				console.log('jQuery start');
+				let login_id = {{ login_id | tojson }};
+				console.log('login_id: ' + login_id);
+
+				if(login_id){
+					$('#input_login_id').val(login_id);
+				}
+			});
+		</script>
+	</body>
+</html>
